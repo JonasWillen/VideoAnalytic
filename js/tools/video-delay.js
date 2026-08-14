@@ -91,6 +91,7 @@ export const videoDelayTool = {
         this.buffer[i] = old[i];
       }
       this.head = 0;
+      this.filled = 0;
     };
     resizeBuffer();
     delayVal.textContent = delayInput.value + "s";
@@ -101,32 +102,48 @@ export const videoDelayTool = {
     });
     fpsInput.addEventListener("change", resizeBuffer);
 
-    setStatus("Running", "ok");
+    setStatus("Buffering…", "warn");
 
     const W = this.liveCanvas.width;
     const H = this.liveCanvas.height;
 
-    // Capture loop at fixed fps.
+    // Capture loop at fixed fps. `head` always points at the NEXT slot to
+    // write, so the slot at `head` holds the OLDEST frame — i.e. the one
+    // captured `capacity/fps` (= delay) seconds ago.
     const fps = Number(fpsInput.value);
     const interval = 1000 / fps;
+    this.filled = 0; // count of slots written so far
     this.captureInterval = setInterval(() => {
       this.liveCtx.drawImage(this.video, 0, 0, W, H);
       const frame = this.liveCtx.getImageData(0, 0, W, H);
       this.buffer[this.head] = frame;
       this.head = (this.head + 1) % this.capacity;
+      if (this.filled < this.capacity) this.filled++;
     }, interval);
 
     // Render loop: draw live + delayed frames.
     const render = () => {
-      // live already drawn in capture; redraw for smoothness between captures.
+      // live drawn here for smoothness between captures.
       this.liveCtx.drawImage(this.video, 0, 0, W, H);
-      const delayedIdx = (this.head + this.capacity - 1) % this.capacity;
-      const delayedFrame = this.buffer[delayedIdx];
-      if (delayedFrame) {
-        this.delayCtx.putImageData(delayedFrame, 0, 0);
+
+      if (this.filled >= this.capacity) {
+        // Buffer full: show the oldest frame = true delay.
+        setStatus("Running", "ok");
+        const delayedFrame = this.buffer[this.head];
+        if (delayedFrame) {
+          this.delayCtx.putImageData(delayedFrame, 0, 0);
+        }
       } else {
-        this.delayCtx.fillStyle = "#000";
-        this.delayCtx.fillRect(0, 0, W, H);
+        // Still filling: show oldest available + buffering note.
+        const pct = Math.round((this.filled / this.capacity) * 100);
+        setStatus(`Buffering… ${pct}%`, "warn");
+        const oldest = this.buffer[this.head];
+        if (oldest) {
+          this.delayCtx.putImageData(oldest, 0, 0);
+        } else {
+          this.delayCtx.fillStyle = "#000";
+          this.delayCtx.fillRect(0, 0, W, H);
+        }
       }
       this.drawRaf = requestAnimationFrame(render);
     };
