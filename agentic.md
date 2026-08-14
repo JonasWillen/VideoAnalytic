@@ -48,6 +48,50 @@ Each module is self-contained and share the common camera/infrastructure layer.
 - Choose which USB camera to use per tool.
 - Future: show multiple cameras simultaneously (grid layout).
 
+### 2.5 Ghost (Video Compare / Overlay)
+
+A "ghost" comparison tool for technique analysis. The athlete records a short
+reference clip (the "ghost"), stores it, then compares it against another clip
+— either a second uploaded video or a newly recorded one. Both clips can be
+played back in two modes:
+
+- **Side-by-side** — two independent playback windows.
+- **Overlay** — both videos composited on one canvas (the ghost rendered at
+  reduced opacity over the second clip) so movement can be compared directly.
+
+Key requirements:
+- **Record a short clip** from the live camera into an in-memory `Blob` (no
+  server). Recording is capped (e.g. ~15s) to bound memory. Capture via
+  `MediaRecorder` on the camera stream.
+- **Store clips locally.** Clips live in memory (an array of `{id, name, blob,
+  url}`). Also support **uploading** a video file (`<input type="file"
+  accept="video/*">`) so pre-recorded footage can be used as a clip. Persisted
+  only for the session — no disk/server storage in v1 (localStorage is too
+  small for video; IndexedDB is a future option).
+- **Pick two clips** (A and B) from the clip library to compare.
+- **Per-clip start offset.** Each of the two clips has its own "start point"
+  scrubber so the two can be synchronized: set clip A's in-point and clip B's
+  in-point, then play both from those offsets at the same time. This is the
+  sync mechanism — align a recognizable frame (e.g. the start of the movement)
+  in each, then play together.
+- **Playback controls:** play/pause both together, a single shared timeline
+  driven by the shorter clip's remaining duration, and a master offset. Loop
+  toggle for repeated review.
+- **Overlay rendering:** draw clip A (ghost) at ~50% opacity, then clip B on
+  top at ~50–70% opacity, on a single canvas sized to the shared resolution.
+  Both clips scaled to a common canvas size (letterboxed).
+- **Two-window mode:** render each clip to its own canvas; both driven by the
+  same play/pause + sync logic.
+
+Implementation notes:
+- Decode clips to `<video>` elements (offscreen or hidden) and draw frames to
+  `<canvas>` on a shared `requestAnimationFrame` loop, advancing each video by
+  `currentTime = inPoint + elapsed` where `elapsed` is shared clock time since
+  play start. This keeps them in sync better than two independent `<video>`
+  elements with separate `play()` calls.
+- `requestVideoFrameCallback` is preferred when available for tighter frame
+  sync; fall back to `requestAnimationFrame`.
+
 ## 3. Architecture
 
 ```
@@ -64,7 +108,9 @@ js/
     elbow-angle.js     # pose module
     reaction-time.js   # motion/timer module
     video-delay.js      # ring-buffer delay module
+    ghost.js            # record/store/upload/compare two clips, sync + overlay
 ```
+
 
 - **No build step.** Plain ES modules (`<script type="module">`) or classic scripts loaded in
   order. External deps (tfjs, pose-detection) loaded from CDN via `<script>` tags.
@@ -83,7 +129,8 @@ js/
   shipped UI English for consistency, comments may be English).
 - No external services, no telemetry, no network calls beyond CDN script loads.
 - No dependencies beyond what the reference already uses (tfjs, pose-detection). Do not add
-  frameworks (React/Vue) or bundlers.
+  frameworks (React/Vue) or bundlers. The ghost module uses only the browser-native
+  `MediaRecorder`, `<video>`, `<canvas>`, and File APIs.
 - Keep each module focused and small. Reuse `utils/math.js` for angle calc, `utils/frame.js`
   for motion detection.
 - Permissions: camera access requires a **secure context** (https or `file://` is allowed for
