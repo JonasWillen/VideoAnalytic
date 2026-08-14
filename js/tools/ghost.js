@@ -138,10 +138,15 @@ export const ghostTool = {
     modeSel.addEventListener("change", () => this.layoutStage(container));
 
     // ---- Clip selection ----
-    const onClipChange = () => {
-      this.loadClipInto(this.vidA, clipA.value);
-      this.loadClipInto(this.vidB, clipB.value);
+    const onClipChange = async () => {
+      await Promise.all([
+        this.loadClipInto(this.vidA, clipA.value),
+        this.loadClipInto(this.vidB, clipB.value),
+      ]);
       this.updateInRanges(container);
+      // seek to the (reset) in-points and show the frame
+      this.vidA.currentTime = +container.querySelector("#gh-aIn").value || 0;
+      this.vidB.currentTime = +container.querySelector("#gh-bIn").value || 0;
       this.layoutStage(container);
     };
     clipA.addEventListener("change", onClipChange);
@@ -266,11 +271,19 @@ export const ghostTool = {
 
   loadClipInto(video, id) {
     const clip = this.clips.find((c) => String(c.id) === String(id));
-    if (!clip) { video.removeAttribute("src"); video.load(); return; }
-    if (video.src !== clip.url) {
+    if (!clip) { video.removeAttribute("src"); video.load(); return Promise.resolve(); }
+    // Always (re)set src so we get a fresh loadedmetadata for the chosen clip.
+    return new Promise((resolve) => {
+      const onMeta = () => {
+        video.removeEventListener("loadedmetadata", onMeta);
+        resolve();
+      };
+      video.addEventListener("loadedmetadata", onMeta);
       video.src = clip.url;
       video.load();
-    }
+      // Fallback in case metadata never fires.
+      setTimeout(() => { video.removeEventListener("loadedmetadata", onMeta); resolve(); }, 1500);
+    });
   },
 
   updateInRanges(container) {
