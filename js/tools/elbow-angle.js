@@ -57,9 +57,14 @@ export const elbowAngleTool = {
     this.video.play();
 
     setStatus("Loading pose model…", "warn");
+    // pose-detection v2 expects the enum, not the raw string. Use the
+    // movenet.modelType enum with a string fallback for older builds.
+    const movenet = poseDetection.movenet || {};
+    const modelType =
+      movenet.modelType?.singleposelightning || "SinglePose.Lightning";
     this.detector = await poseDetection.createDetector(
       poseDetection.SupportedModels.MoveNet,
-      { modelType: "singlepose_lightning" }
+      { modelType }
     );
     setStatus("Running", "ok");
 
