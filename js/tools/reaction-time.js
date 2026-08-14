@@ -48,6 +48,7 @@ export const reactionTimeTool = {
     const mirror = container.querySelector("#rt-mirror");
     const applyMirror = () => {
       const on = mirror.checked;
+      this.mirrored = on;
       this.video.classList.toggle("mirror", on);
       this.canvas.classList.toggle("mirror", on);
     };
@@ -120,14 +121,48 @@ export const reactionTimeTool = {
     const ctx = this.ctx;
     const y = this.canvas.height / 2;
     const drawDot = (x, color, label) => {
+      // marker dot
       ctx.beginPath();
       ctx.arc(x, y, 12, 0, 2 * Math.PI);
       ctx.fillStyle = color;
       ctx.fill();
-      ctx.fillStyle = "#000";
-      ctx.font = "10px sans-serif";
+
+      // readable label pill: solid background + outlined glyphs.
+      // When the canvas is CSS-mirrored, drawn text is flipped backwards,
+      // so we counter-flip the text transform to keep it readable.
+      ctx.save();
+      if (this.mirrored) {
+        ctx.translate(x, y);
+        ctx.scale(-1, 1);
+        ctx.translate(-x, -y);
+      }
+      ctx.font = "bold 11px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(label, x, y + 4);
+      ctx.textBaseline = "middle";
+      const metrics = ctx.measureText(label);
+      const padX = 5;
+      const padY = 3;
+      const tw = metrics.width + padX * 2;
+      const th = 13 + padY * 2;
+      const bx = x - tw / 2;
+      const by = y + 22 - th / 2;
+      // background pill
+      ctx.fillStyle = "rgba(0,0,0,0.78)";
+      ctx.beginPath();
+      const r = 6;
+      ctx.moveTo(bx + r, by);
+      ctx.arcTo(bx + tw, by, bx + tw, by + th, r);
+      ctx.arcTo(bx + tw, by + th, bx, by + th, r);
+      ctx.arcTo(bx, by + th, bx, by, r);
+      ctx.arcTo(bx, by, bx + tw, by, r);
+      ctx.fill();
+      // outlined text for legibility on any background
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#000";
+      ctx.strokeText(label, x, y + 22);
+      ctx.fillStyle = "#fff";
+      ctx.fillText(label, x, y + 22);
+      ctx.restore();
     };
     drawDot(srcX, "lime", "START");
     drawDot(dstX, "orange", "STOP");
