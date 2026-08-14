@@ -21,7 +21,7 @@ export const reactionTimeTool = {
         <label for="rt-sens">Sensitivity:</label>
         <input type="range" id="rt-sens" min="5" max="60" value="25" />
         <label style="margin-left:16px"><input type="checkbox" id="rt-mirror" checked /> Mirror</label>
-        <button id="rt-arm" type="button" class="tool-btn" style="width:auto">Arm</button>
+        <button id="rt-arm" type="button" class="tool-btn" style="width:auto">Start</button>
         <button id="rt-reset" type="button" class="tool-btn" style="width:auto">Reset stats</button>
       </div>
       <div class="video-stage">
