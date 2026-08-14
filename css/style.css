@@ -23,12 +23,50 @@ html, body {
 }
 
 .app-header {
-  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
   border-bottom: 1px solid var(--border);
   background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 100%);
+  flex-wrap: wrap;
 }
-.app-header h1 { margin: 0; font-size: 1.5rem; }
-.subtitle { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+.header-left { min-width: 0; }
+.app-header h1 { margin: 0; font-size: 1.4rem; }
+.subtitle { margin: 4px 0 0; color: var(--muted); font-size: 0.85rem; }
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.header-controls label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+#cameraSelect {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  max-width: 260px;
+}
+#refreshCameras {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+#refreshCameras:hover { border-color: var(--accent); }
 
 .app-main {
   display: grid;
@@ -47,42 +85,11 @@ html, body {
   top: 16px;
 }
 
-.control-group {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.control-group label {
-  position: absolute;
-  width: 1px; height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
-#cameraSelect {
-  flex: 1;
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px;
-  font-size: 0.9rem;
-}
-#refreshCameras {
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  width: 36px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-#refreshCameras:hover { border-color: var(--accent); }
-
 .tool-nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 16px;
 }
 .tool-btn {
   text-align: left;

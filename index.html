@@ -8,18 +8,19 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>🏟️ Sports Video Analytics</h1>
-    <p class="subtitle">Client-side camera analytics — elbow angle, reaction time, delayed review</p>
+    <div class="header-left">
+      <h1>🏟️ Sports Video Analytics</h1>
+      <p class="subtitle">Client-side camera analytics — elbow angle, reaction time, delayed review</p>
+    </div>
+    <div class="header-controls">
+      <label for="cameraSelect">Camera</label>
+      <select id="cameraSelect" title="Select USB camera"></select>
+      <button id="refreshCameras" type="button" title="Re-scan cameras">↻</button>
+    </div>
   </header>
 
   <main class="app-main">
     <aside class="toolbar">
-      <div class="control-group">
-        <label for="cameraSelect">Camera</label>
-        <select id="cameraSelect" title="Select USB camera"></select>
-        <button id="refreshCameras" type="button" title="Re-scan cameras">↻</button>
-      </div>
-
       <nav class="tool-nav" aria-label="Analytics tools">
         <button class="tool-btn" data-tool="elbow-angle">🦾 Elbow Angle</button>
         <button class="tool-btn" data-tool="reaction-time">⚡ Reaction Time</button>
