@@ -153,19 +153,29 @@ export const ghostTool = {
     clipB.addEventListener("change", onClipChange);
 
     // ---- In-point scrubbers ----
+    // Scrubbing seeks the video and redraws the frame once the seek
+    // completes (on 'seeked'), so the displayed frame always matches the
+    // slider position for easy visual sync.
+    const seekAndDraw = (video, t) => {
+      if (!video.src) { this.drawStill(container); return; }
+      const target = Math.max(0, Math.min(t, video.duration || t));
+      const onSeeked = () => {
+        video.removeEventListener("seeked", onSeeked);
+        this.drawStill(container);
+      };
+      video.addEventListener("seeked", onSeeked);
+      video.currentTime = target;
+      // Redraw immediately too (covers browsers that fire seeked syncously
+      // or where the frame is already decoded).
+      this.drawStill(container);
+    };
     aIn.addEventListener("input", () => {
       aInVal.textContent = (+aIn.value).toFixed(1) + "s";
-      if (!this.playing) {
-        this.vidA.currentTime = +aIn.value;
-        this.drawStill(container);
-      }
+      if (!this.playing) seekAndDraw(this.vidA, +aIn.value);
     });
     bIn.addEventListener("input", () => {
       bInVal.textContent = (+bIn.value).toFixed(1) + "s";
-      if (!this.playing) {
-        this.vidB.currentTime = +bIn.value;
-        this.drawStill(container);
-      }
+      if (!this.playing) seekAndDraw(this.vidB, +bIn.value);
     });
 
     // ---- Play / Pause ----
