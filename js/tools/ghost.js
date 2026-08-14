@@ -297,21 +297,38 @@ export const ghostTool = {
   },
 
   updateInRanges(container) {
+    // duration may still be NaN right at loadedmetadata for some webm/mp4
+    // payloads; poll a few times until it's finite, then set the slider.
     const aIn = container.querySelector("#gh-aIn");
     const bIn = container.querySelector("#gh-bIn");
     const aInVal = container.querySelector("#gh-aIn-val");
     const bInVal = container.querySelector("#gh-bIn-val");
+
     const setRange = (el, val, video) => {
-      const dur = video.duration && isFinite(video.duration) ? video.duration : 0;
-      el.max = dur || 0;
-      const v = Math.min(+val, dur || 0);
-      el.value = v;
+      const dur = video.duration && isFinite(video.duration) && video.duration > 0
+        ? video.duration : 0;
+      // Never leave max at 0 (a degenerate range can't be moved). Use a tiny
+      // epsilon when duration isn't known yet; the real value is set on retry.
+      el.max = String(dur > 0 ? dur : 0.01);
+      el.step = "0.05";
+      const v = dur > 0 ? Math.min(+val, dur) : 0;
+      el.value = String(v);
       return v;
     };
-    const aV = setRange(aIn, aIn.value, this.vidA);
-    const bV = setRange(bIn, bIn.value, this.vidB);
-    aInVal.textContent = aV.toFixed(1) + "s";
-    bInVal.textContent = bV.toFixed(1) + "s";
+
+    let tries = 0;
+    const apply = () => {
+      const aV = setRange(aIn, aIn.value, this.vidA);
+      const bV = setRange(bIn, bIn.value, this.vidB);
+      aInVal.textContent = aV.toFixed(1) + "s";
+      bInVal.textContent = bV.toFixed(1) + "s";
+      const aReady = this.vidA.duration && isFinite(this.vidA.duration) && this.vidA.duration > 0;
+      const bReady = this.vidB.duration && isFinite(this.vidB.duration) && this.vidB.duration > 0;
+      if ((!aReady || !bReady) && tries++ < 10) {
+        setTimeout(apply, 100);
+      }
+    };
+    apply();
   },
 
   // ---------- Stage layout ----------
