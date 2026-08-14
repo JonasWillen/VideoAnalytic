@@ -226,3 +226,62 @@ html, body {
 .status.ok { color: var(--accent-2); }
 .status.warn { color: #ffd166; }
 .status.err { color: var(--danger); }
+
+
+/* ---- Ghost tool ---- */
+.ghost-section {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.ghost-section h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: var(--accent);
+}
+.gh-preview {
+  width: 160px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #000;
+}
+.tool-btn.rec {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.gh-library {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.clip-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+}
+.clip-card video {
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #000;
+}
+.clip-info { display: flex; flex-direction: column; }
+.clip-info .hint { font-size: 0.75rem; }
+.clip-del {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 6px;
+}
+.clip-del:hover { color: var(--danger); }
+.gh-stage { margin-top: 10px; }
