@@ -178,6 +178,14 @@ html, body {
 .video-stage video.mirror,
 .video-stage canvas.mirror { transform: scaleX(-1); }
 
+/* A stage that holds only a canvas (no <video> sibling, e.g. the delayed
+   preview) must NOT absolute-position it, or the container collapses to
+   zero height and nothing is visible. */
+.video-stage.solo canvas {
+  position: static;
+}
+
+
 .readout {
   display: flex;
   gap: 24px;

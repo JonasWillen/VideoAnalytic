@@ -44,7 +44,7 @@ export const videoDelayTool = {
         </div>
         <div class="stage-block">
           <h3>Delayed</h3>
-          <div class="video-stage">
+          <div class="video-stage solo">
             <canvas id="vd-delayed" width="640" height="480"></canvas>
           </div>
         </div>
