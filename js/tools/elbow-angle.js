@@ -56,6 +56,24 @@ export const elbowAngleTool = {
     });
     this.video.play();
 
+    setStatus("Initializing TensorFlow…", "warn");
+    // Initialize the tfjs backend before any model call. WebGPU is preferred by
+    // the UMD bundle but isn't always available/initialized; fall back to WebGL,
+    // then to whatever backend is registered.
+    if (typeof tf !== "undefined" && tf.setBackend) {
+      // webgpu is only registered if the webgpu backend script is loaded
+      // (it isn't, in our setup); webgl ships with the core bundle and is
+      // available everywhere tfjs runs. Prefer webgl, fall back to cpu.
+      const tryBackends = ["webgl", "cpu", "webgpu"];
+      let ok = false;
+      for (const b of tryBackends) {
+        try {
+          if (await tf.setBackend(b)) { await tf.ready(); ok = true; break; }
+        } catch (_) {}
+      }
+      if (!ok) await tf.ready();
+    }
+
     setStatus("Loading pose model…", "warn");
     // pose-detection v2 expects the enum, not the raw string. Use the
     // movenet.modelType enum with a string fallback for older builds.
