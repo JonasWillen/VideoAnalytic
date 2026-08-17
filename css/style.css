@@ -79,42 +79,71 @@ html, body {
 }
 #refreshCameras:hover { border-color: var(--accent); }
 
-/* ---------- Main layout: sidebar + workspace ---------- */
+/* ---------- Main layout: single-column workspace (menu is a popup) ---------- */
 .app-main {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 16px;
   padding: 16px;
-  align-items: start;
 }
 
-.toolbar {
+/* ---------- Tools menu trigger button (in header) ---------- */
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.menu-btn:hover { background: #3d8ae6; border-color: #3d8ae6; }
+.menu-btn[aria-expanded="true"] { background: var(--panel-2); color: var(--text); border-color: var(--accent); }
+.menu-btn-label { font-weight: 600; }
+
+/* ---------- Pop-up menu overlay ---------- */
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 40;
+  /* fade in */
+  animation: menuFade 0.15s ease;
+}
+.menu-popup {
+  position: fixed;
+  z-index: 41;
+  /* center on screen */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
-  position: sticky;
-  top: 16px;
-  /* When the toolbar collapses, the 240px grid column stays (so the
-     workspace doesn't jump) but the toolbar itself becomes a thin bar. */
-  transition: padding 0.15s ease;
+  padding: 16px;
+  width: min(320px, calc(100vw - 32px));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  animation: menuPop 0.15s ease;
 }
+.menu-popup[hidden],
+.menu-backdrop[hidden] { display: none; }
 
-/* Toolbar header: a label row + minimize/expand toggle. */
-.toolbar-head {
+.menu-popup-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
-.toolbar-label {
+.menu-popup-title {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
-.toolbar-toggle {
+.menu-close {
   background: var(--panel-2);
   color: var(--text);
   border: 1px solid var(--border);
@@ -130,18 +159,10 @@ html, body {
   flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s;
 }
-.toolbar-toggle:hover { border-color: var(--accent); }
-.toolbar-body {
-  /* wrapper that gets hidden when collapsed */
-}
+.menu-close:hover { border-color: var(--danger); color: var(--danger); }
 
-/* Collapsed state: hide the body, shrink the toolbar to a thin rail. */
-.toolbar.collapsed { padding: 10px; }
-.toolbar.collapsed .toolbar-body { display: none; }
-.toolbar.collapsed .toolbar-head { margin-bottom: 0; }
-.toolbar.collapsed .toolbar-toggle { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-.tool-nav {
+/* In the popup, tool-nav is always a vertical list. */
+.menu-popup .tool-nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -361,42 +382,21 @@ html, body {
 .gh-stage { margin-top: 10px; }
 
 
+/* ---------- Menu animations ---------- */
+@keyframes menuFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes menuPop {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
 /* ============================================================= */
 /* Responsive: tablet / small laptop (<= 920px)                  */
-/* Collapse the left sidebar into a horizontal tool bar on top.  */
+/* (The menu is already a centered popup; just tighten padding.)  */
 /* ============================================================= */
 @media (max-width: 920px) {
-  .app-main {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-  }
-
-  .toolbar {
-    position: static;
-    top: auto;
-    padding: 10px;
-  }
-
-  .tool-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    margin-bottom: 10px;
-    /* hide scrollbar but keep scrollable */
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
-  }
-  .tool-nav .tool-btn {
-    flex: 0 0 auto;
-    white-space: nowrap;
-  }
-  .stop-btn {
-    margin-top: 0;
-    width: auto;
-  }
-
+  .app-main { padding: 12px; }
   .workspace { min-height: 360px; }
+  /* On tablets the "Tools" text label is still useful; keep it. */
 }
 
 /* ============================================================= */
@@ -465,10 +465,11 @@ html, body {
   .stop-btn,
   #refreshCameras,
   .clip-del,
-  .toolbar-toggle {
+  .menu-btn,
+  .menu-close {
     min-height: 44px;
   }
-  .toolbar-toggle { width: 44px; }
+  .menu-close { width: 44px; }
   .tool-btn { padding: 12px 16px; }
 }
 

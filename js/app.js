@@ -18,8 +18,10 @@ const refreshCameras = document.getElementById("refreshCameras");
 const stopBtn = document.getElementById("stopTool");
 const statusEl = document.getElementById("status");
 const toolBtns = document.querySelectorAll(".tool-btn[data-tool]");
-const toolbar = document.getElementById("toolbar");
-const toolbarToggle = document.getElementById("toolbarToggle");
+const menuBtn = document.getElementById("menuToggle");
+const menuPopup = document.getElementById("menuPopup");
+const menuBackdrop = document.getElementById("menuBackdrop");
+const menuClose = document.getElementById("menuClose");
 
 let currentTool = null;
 let currentStream = null;
@@ -102,21 +104,28 @@ function stopCurrent() {
   setStatus("Idle");
 }
 
-// Minimize / expand the tool menu.
-function setToolbarCollapsed(collapsed) {
-  toolbar.classList.toggle("collapsed", collapsed);
-  toolbarToggle.setAttribute("aria-expanded", String(!collapsed));
-  toolbarToggle.textContent = collapsed ? "➕" : "➖";
-  toolbarToggle.title = collapsed ? "Expand tools" : "Minimize tools";
+// Pop-up tools menu: open from the header ☰ button, close on selection,
+// backdrop click, ✕ button, or Escape.
+function setMenuOpen(open) {
+  menuPopup.hidden = !open;
+  menuBackdrop.hidden = !open;
+  menuBtn.setAttribute("aria-expanded", String(open));
 }
-if (toolbarToggle) {
-  toolbarToggle.addEventListener("click", () => {
-    setToolbarCollapsed(!toolbar.classList.contains("collapsed"));
-  });
+if (menuBtn) {
+  menuBtn.addEventListener("click", () => setMenuOpen(menuPopup.hidden));
 }
+if (menuClose) menuClose.addEventListener("click", () => setMenuOpen(false));
+if (menuBackdrop) menuBackdrop.addEventListener("click", () => setMenuOpen(false));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !menuPopup.hidden) setMenuOpen(false);
+});
 
 toolBtns.forEach((btn) => {
-  btn.addEventListener("click", () => activateTool(btn.dataset.tool));
+  btn.addEventListener("click", () => {
+    activateTool(btn.dataset.tool);
+    // Close the popup once a tool is chosen.
+    setMenuOpen(false);
+  });
 });
 stopBtn.addEventListener("click", stopCurrent);
 refreshCameras.addEventListener("click", refreshCameraList);

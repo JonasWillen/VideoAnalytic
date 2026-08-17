@@ -20,37 +20,37 @@
       <label for="cameraSelect">Camera</label>
       <select id="cameraSelect" title="Select USB camera"></select>
       <button id="refreshCameras" type="button" title="Re-scan cameras">↻</button>
+      <button id="menuToggle" class="menu-btn" type="button" aria-haspopup="true"
+        aria-expanded="false" aria-controls="menuPopup" title="Open tools menu">
+        ☰ <span class="menu-btn-label">Tools</span>
+      </button>
     </div>
   </header>
 
   <main class="app-main">
-    <aside class="toolbar" id="toolbar">
-      <div class="toolbar-head">
-        <span class="toolbar-label">Tools</span>
-        <button id="toolbarToggle" class="toolbar-toggle" type="button"
-          aria-expanded="true" aria-controls="toolbarBody" title="Minimize tools">
-          ➖
-        </button>
-      </div>
-      <div class="toolbar-body" id="toolbarBody">
-        <nav class="tool-nav" aria-label="Analytics tools">
-          <button class="tool-btn" data-tool="elbow-angle">🦾 Elbow Angle</button>
-          <button class="tool-btn" data-tool="reaction-time">⚡ Reaction Time</button>
-          <button class="tool-btn" data-tool="video-delay">⏱️ Video Delay</button>
-          <button class="tool-btn" data-tool="ghost">👻 Ghost Compare</button>
-        </nav>
-
-        <button id="stopTool" class="stop-btn" type="button" disabled>■ Stop</button>
-      </div>
-    </aside>
-
     <section id="workspace" class="workspace" aria-live="polite">
       <div class="placeholder">
-        <p>Select a tool on the left to begin.</p>
+        <p>Open the Tools menu (☰) to begin.</p>
         <p class="hint">Camera access requires a secure context (https or localhost).</p>
       </div>
     </section>
   </main>
+
+  <!-- Pop-up tools menu: opened from the header ☰ button -->
+  <div id="menuBackdrop" class="menu-backdrop" hidden></div>
+  <div id="menuPopup" class="menu-popup" role="menu" aria-label="Analytics tools" hidden>
+    <div class="menu-popup-head">
+      <span class="menu-popup-title">Tools</span>
+      <button id="menuClose" class="menu-close" type="button" title="Close menu">✕</button>
+    </div>
+    <nav class="tool-nav" aria-label="Analytics tools">
+      <button class="tool-btn" data-tool="elbow-angle">🦾 Elbow Angle</button>
+      <button class="tool-btn" data-tool="reaction-time">⚡ Reaction Time</button>
+      <button class="tool-btn" data-tool="video-delay">⏱️ Video Delay</button>
+      <button class="tool-btn" data-tool="ghost">👻 Ghost Compare</button>
+    </nav>
+    <button id="stopTool" class="stop-btn" type="button" disabled>■ Stop</button>
+  </div>
 
   <footer class="app-footer">
     <span id="status" class="status">Idle</span>
