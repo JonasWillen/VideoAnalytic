@@ -4,12 +4,14 @@ import { elbowAngleTool } from "./tools/elbow-angle.js";
 import { reactionTimeTool } from "./tools/reaction-time.js";
 import { videoDelayTool } from "./tools/video-delay.js";
 import { ghostTool } from "./tools/ghost.js";
+import { frameSequenceTool } from "./tools/frame-sequence.js";
 
 const TOOLS = {
   "elbow-angle": elbowAngleTool,
   "reaction-time": reactionTimeTool,
   "video-delay": videoDelayTool,
   "ghost": ghostTool,
+  "frame-sequence": frameSequenceTool,
 };
 
 const workspace = document.getElementById("workspace");
