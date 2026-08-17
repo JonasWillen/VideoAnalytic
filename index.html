@@ -24,15 +24,24 @@
   </header>
 
   <main class="app-main">
-    <aside class="toolbar">
-      <nav class="tool-nav" aria-label="Analytics tools">
-        <button class="tool-btn" data-tool="elbow-angle">🦾 Elbow Angle</button>
-        <button class="tool-btn" data-tool="reaction-time">⚡ Reaction Time</button>
-        <button class="tool-btn" data-tool="video-delay">⏱️ Video Delay</button>
-        <button class="tool-btn" data-tool="ghost">👻 Ghost Compare</button>
-      </nav>
+    <aside class="toolbar" id="toolbar">
+      <div class="toolbar-head">
+        <span class="toolbar-label">Tools</span>
+        <button id="toolbarToggle" class="toolbar-toggle" type="button"
+          aria-expanded="true" aria-controls="toolbarBody" title="Minimize tools">
+          ➖
+        </button>
+      </div>
+      <div class="toolbar-body" id="toolbarBody">
+        <nav class="tool-nav" aria-label="Analytics tools">
+          <button class="tool-btn" data-tool="elbow-angle">🦾 Elbow Angle</button>
+          <button class="tool-btn" data-tool="reaction-time">⚡ Reaction Time</button>
+          <button class="tool-btn" data-tool="video-delay">⏱️ Video Delay</button>
+          <button class="tool-btn" data-tool="ghost">👻 Ghost Compare</button>
+        </nav>
 
-      <button id="stopTool" class="stop-btn" type="button" disabled>■ Stop</button>
+        <button id="stopTool" class="stop-btn" type="button" disabled>■ Stop</button>
+      </div>
     </aside>
 
     <section id="workspace" class="workspace" aria-live="polite">

@@ -18,6 +18,8 @@ const refreshCameras = document.getElementById("refreshCameras");
 const stopBtn = document.getElementById("stopTool");
 const statusEl = document.getElementById("status");
 const toolBtns = document.querySelectorAll(".tool-btn[data-tool]");
+const toolbar = document.getElementById("toolbar");
+const toolbarToggle = document.getElementById("toolbarToggle");
 
 let currentTool = null;
 let currentStream = null;
@@ -98,6 +100,19 @@ function stopCurrent() {
   stopBtn.disabled = true;
   workspace.innerHTML = `<div class="placeholder"><p>Select a tool on the left to begin.</p></div>`;
   setStatus("Idle");
+}
+
+// Minimize / expand the tool menu.
+function setToolbarCollapsed(collapsed) {
+  toolbar.classList.toggle("collapsed", collapsed);
+  toolbarToggle.setAttribute("aria-expanded", String(!collapsed));
+  toolbarToggle.textContent = collapsed ? "➕" : "➖";
+  toolbarToggle.title = collapsed ? "Expand tools" : "Minimize tools";
+}
+if (toolbarToggle) {
+  toolbarToggle.addEventListener("click", () => {
+    setToolbarCollapsed(!toolbar.classList.contains("collapsed"));
+  });
 }
 
 toolBtns.forEach((btn) => {

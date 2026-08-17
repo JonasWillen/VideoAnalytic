@@ -95,7 +95,51 @@ html, body {
   padding: 14px;
   position: sticky;
   top: 16px;
+  /* When the toolbar collapses, the 240px grid column stays (so the
+     workspace doesn't jump) but the toolbar itself becomes a thin bar. */
+  transition: padding 0.15s ease;
 }
+
+/* Toolbar header: a label row + minimize/expand toggle. */
+.toolbar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.toolbar-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.toolbar-toggle {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+.toolbar-toggle:hover { border-color: var(--accent); }
+.toolbar-body {
+  /* wrapper that gets hidden when collapsed */
+}
+
+/* Collapsed state: hide the body, shrink the toolbar to a thin rail. */
+.toolbar.collapsed { padding: 10px; }
+.toolbar.collapsed .toolbar-body { display: none; }
+.toolbar.collapsed .toolbar-head { margin-bottom: 0; }
+.toolbar.collapsed .toolbar-toggle { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 .tool-nav {
   display: flex;
@@ -420,9 +464,11 @@ html, body {
   .tool-btn,
   .stop-btn,
   #refreshCameras,
-  .clip-del {
+  .clip-del,
+  .toolbar-toggle {
     min-height: 44px;
   }
+  .toolbar-toggle { width: 44px; }
   .tool-btn { padding: 12px 16px; }
 }
 
