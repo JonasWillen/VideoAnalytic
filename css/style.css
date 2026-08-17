@@ -9,6 +9,9 @@
   --danger: #ff5c5c;
   --border: #2c333d;
   --radius: 10px;
+  /* Breakpoints */
+  --bp-tablet: 920px;   /* <= tablet / small laptop: collapse sidebar */
+  --bp-mobile: 620px;   /* <= phone: stack, shrink controls */
 }
 
 * { box-sizing: border-box; }
@@ -20,20 +23,26 @@ html, body {
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   min-height: 100vh;
+  /* Prevent horizontal scroll caused by any fixed-width children on small
+     screens; content should reflow instead. */
+  overflow-x: hidden;
+  /* Respect iOS Safari's dynamic toolbar + home indicator. */
+  -webkit-text-size-adjust: 100%;
 }
 
+/* ---------- Header ---------- */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px 16px;
   padding: 14px 24px;
   border-bottom: 1px solid var(--border);
   background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 100%);
   flex-wrap: wrap;
 }
 .header-left { min-width: 0; }
-.app-header h1 { margin: 0; font-size: 1.4rem; }
+.app-header h1 { margin: 0; font-size: clamp(1.05rem, 2.6vw, 1.4rem); }
 .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 0.85rem; }
 
 .header-controls {
@@ -55,6 +64,7 @@ html, body {
   padding: 8px 10px;
   font-size: 0.9rem;
   max-width: 260px;
+  min-width: 0;
 }
 #refreshCameras {
   background: var(--panel-2);
@@ -65,27 +75,94 @@ html, body {
   height: 36px;
   cursor: pointer;
   font-size: 1rem;
+  flex-shrink: 0;
 }
 #refreshCameras:hover { border-color: var(--accent); }
 
+/* ---------- Main layout: single-column workspace (menu is a popup) ---------- */
 .app-main {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 16px;
   padding: 16px;
-  align-items: start;
 }
 
-.toolbar {
+/* ---------- Tools menu trigger button (in header) ---------- */
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.menu-btn:hover { background: #3d8ae6; border-color: #3d8ae6; }
+.menu-btn[aria-expanded="true"] { background: var(--panel-2); color: var(--text); border-color: var(--accent); }
+.menu-btn-label { font-weight: 600; }
+
+/* ---------- Pop-up menu overlay ---------- */
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 40;
+  /* fade in */
+  animation: menuFade 0.15s ease;
+}
+.menu-popup {
+  position: fixed;
+  z-index: 41;
+  /* center on screen */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
-  position: sticky;
-  top: 16px;
+  padding: 16px;
+  width: min(320px, calc(100vw - 32px));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  animation: menuPop 0.15s ease;
 }
+.menu-popup[hidden],
+.menu-backdrop[hidden] { display: none; }
 
-.tool-nav {
+.menu-popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.menu-popup-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.menu-close {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+.menu-close:hover { border-color: var(--danger); color: var(--danger); }
+
+/* In the popup, tool-nav is always a vertical list. */
+.menu-popup .tool-nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -122,6 +199,7 @@ html, body {
 }
 .stop-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* ---------- Workspace ---------- */
 .workspace {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -156,9 +234,16 @@ html, body {
 .tool-controls input[type="range"] { width: 160px; vertical-align: middle; }
 .tool-controls .value { font-variant-numeric: tabular-nums; min-width: 48px; }
 
+/* ---------- Video stage (fluid, was fixed 640x480) ----------
+   The stage sizes to its container width while preserving a 4:3 aspect ratio,
+   and caps out at 640px so it doesn't get huge on wide screens. On phones it
+   shrinks to fit the viewport. */
 .video-stage {
   position: relative;
-  display: inline-block;
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 4 / 3;
   background: #000;
   border-radius: 8px;
   overflow: hidden;
@@ -166,9 +251,8 @@ html, body {
 .video-stage video,
 .video-stage canvas {
   display: block;
-  width: 640px;
-  height: 480px;
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
 }
 .video-stage canvas {
   position: absolute;
@@ -185,7 +269,10 @@ html, body {
   position: static;
 }
 
+/* Ghost overlay canvas is 16:9. */
+.gh-stage .video-stage { aspect-ratio: 16 / 9; }
 
+/* ---------- Readouts / stats ---------- */
 .readout {
   display: flex;
   gap: 24px;
@@ -201,8 +288,15 @@ html, body {
 .stat .label { display: block; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
 .stat .val { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
 
+/* ---------- Side-by-side (video-delay, ghost side mode) ---------- */
 .side-by-side { display: flex; gap: 16px; flex-wrap: wrap; }
-.side-by-side .stage-block { display: flex; flex-direction: column; gap: 6px; }
+.side-by-side .stage-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
 .side-by-side .stage-block h3 { margin: 0; font-size: 0.95rem; color: var(--muted); }
 
 .error-banner {
@@ -214,6 +308,7 @@ html, body {
   font-size: 0.9rem;
 }
 
+/* ---------- Footer ---------- */
 .app-footer {
   border-top: 1px solid var(--border);
   padding: 10px 24px;
@@ -222,7 +317,7 @@ html, body {
   display: flex;
   justify-content: space-between;
 }
-.status::before { content: "● "; }
+.status::before { content: "\25cf "; }
 .status.ok { color: var(--accent-2); }
 .status.warn { color: #ffd166; }
 .status.err { color: var(--danger); }
@@ -285,3 +380,185 @@ html, body {
 }
 .clip-del:hover { color: var(--danger); }
 .gh-stage { margin-top: 10px; }
+
+
+/* ---------- Menu animations ---------- */
+@keyframes menuFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes menuPop {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ============================================================= */
+/* Responsive: tablet / small laptop (<= 920px)                  */
+/* (The menu is already a centered popup; just tighten padding.)  */
+/* ============================================================= */
+@media (max-width: 920px) {
+  .app-main { padding: 12px; }
+  .workspace { min-height: 360px; }
+  /* On tablets the "Tools" text label is still useful; keep it. */
+}
+
+/* ============================================================= */
+/* Responsive: phone (<= 620px)                                  */
+/* Stack everything, shrink paddings, touch-friendly controls.   */
+/* ============================================================= */
+@media (max-width: 620px) {
+  /* safe-area insets for notched / home-indicator phones */
+  .app-header {
+    padding: 10px 14px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+  .app-main {
+    padding: 10px;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
+  .app-footer {
+    padding: 10px 14px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  /* subtitle is noisy on phones; hide it to reclaim vertical space */
+  .subtitle { display: none; }
+
+  /* header controls wrap below the title on narrow phones */
+  .app-header { gap: 8px 12px; }
+  .header-controls {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  #cameraSelect { max-width: 100%; flex: 1 1 180px; }
+
+  .workspace { padding: 12px; min-height: 300px; }
+
+  /* compact stats on phones */
+  .readout { gap: 10px; }
+  .stat { padding: 8px 12px; flex: 1 1 calc(50% - 10px); }
+  .stat .val { font-size: 1.2rem; }
+
+  /* control rows: let ranges take available width instead of fixed 160px */
+  .tool-controls { gap: 8px 10px; }
+  .tool-controls input[type="range"] { width: 100%; flex: 1 1 120px; }
+
+  /* video fills available width on phones */
+  .video-stage { max-width: 100%; }
+  .side-by-side .stage-block { flex: 1 1 100%; }
+
+  /* clip cards stack their info readably */
+  .clip-card { flex: 1 1 calc(50% - 10px); min-width: 0; }
+  .clip-card video { width: 80px; height: 45px; }
+
+  /* ghost section horizontal paddings tighten */
+  .ghost-section { padding-top: 10px; margin-top: 10px; }
+}
+
+/* ============================================================= */
+/* Touch-friendly tap targets on coarse pointers (most phones).  */
+/* ============================================================= */
+@media (pointer: coarse) {
+  .tool-btn,
+  .stop-btn,
+  #refreshCameras,
+  .clip-del,
+  .menu-btn,
+  .menu-close {
+    min-height: 44px;
+  }
+  .menu-close { width: 44px; }
+  .tool-btn { padding: 12px 16px; }
+}
+
+
+/* ============================================================= */
+/* Neutralize the inline margin-left spacing used inside          */
+/* .tool-controls so wrapped rows align to a clean left edge on   */
+/* narrow screens, and make selects fluid.                        */
+/* ============================================================= */
+@media (max-width: 920px) {
+  /* Override inline style="margin-left:..." gaps within control rows
+     when they wrap to multiple lines on tablets/phones. */
+  .tool-controls > label[style*="margin-left"],
+  .tool-controls label[style*="margin-left:16px"],
+  .tool-controls label[style*="margin-left:8px"] {
+    margin-left: 0 !important;
+  }
+  .tool-controls select {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Prevent the gh-preview camera preview from overflowing on phones. */
+@media (max-width: 620px) {
+  .gh-preview { width: 100%; max-width: 160px; }
+}
+
+
+/* ---- Frame Sequence tool ---- */
+.fs-preview { margin: 4px 0 12px; }
+.fs-preview-canvas {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.fs-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.fs-frame {
+  position: relative;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.fs-frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #000;
+}
+.fs-frame-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.fs-frame-dl {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+}
+.fs-frame-dl:hover { background: var(--accent); border-color: var(--accent); }
+
+/* Tablets: 4 across */
+@media (max-width: 920px) {
+  .fs-strip { grid-template-columns: repeat(4, 1fr); }
+}
+/* Phones: 2 across */
+@media (max-width: 620px) {
+  .fs-strip { grid-template-columns: repeat(2, 1fr); }
+}

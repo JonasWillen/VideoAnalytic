@@ -4,12 +4,14 @@ import { elbowAngleTool } from "./tools/elbow-angle.js";
 import { reactionTimeTool } from "./tools/reaction-time.js";
 import { videoDelayTool } from "./tools/video-delay.js";
 import { ghostTool } from "./tools/ghost.js";
+import { frameSequenceTool } from "./tools/frame-sequence.js";
 
 const TOOLS = {
   "elbow-angle": elbowAngleTool,
   "reaction-time": reactionTimeTool,
   "video-delay": videoDelayTool,
   "ghost": ghostTool,
+  "frame-sequence": frameSequenceTool,
 };
 
 const workspace = document.getElementById("workspace");
@@ -18,6 +20,10 @@ const refreshCameras = document.getElementById("refreshCameras");
 const stopBtn = document.getElementById("stopTool");
 const statusEl = document.getElementById("status");
 const toolBtns = document.querySelectorAll(".tool-btn[data-tool]");
+const menuBtn = document.getElementById("menuToggle");
+const menuPopup = document.getElementById("menuPopup");
+const menuBackdrop = document.getElementById("menuBackdrop");
+const menuClose = document.getElementById("menuClose");
 
 let currentTool = null;
 let currentStream = null;
@@ -100,8 +106,28 @@ function stopCurrent() {
   setStatus("Idle");
 }
 
+// Pop-up tools menu: open from the header ☰ button, close on selection,
+// backdrop click, ✕ button, or Escape.
+function setMenuOpen(open) {
+  menuPopup.hidden = !open;
+  menuBackdrop.hidden = !open;
+  menuBtn.setAttribute("aria-expanded", String(open));
+}
+if (menuBtn) {
+  menuBtn.addEventListener("click", () => setMenuOpen(menuPopup.hidden));
+}
+if (menuClose) menuClose.addEventListener("click", () => setMenuOpen(false));
+if (menuBackdrop) menuBackdrop.addEventListener("click", () => setMenuOpen(false));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !menuPopup.hidden) setMenuOpen(false);
+});
+
 toolBtns.forEach((btn) => {
-  btn.addEventListener("click", () => activateTool(btn.dataset.tool));
+  btn.addEventListener("click", () => {
+    activateTool(btn.dataset.tool);
+    // Close the popup once a tool is chosen.
+    setMenuOpen(false);
+  });
 });
 stopBtn.addEventListener("click", stopCurrent);
 refreshCameras.addEventListener("click", refreshCameraList);
