@@ -83,6 +83,13 @@ async function activateTool(toolKey) {
   stopBtn.disabled = false;
 
   const tool = TOOLS[toolKey];
+  if (!tool || typeof tool.init !== "function") {
+    showError(`Unknown tool "${toolKey}" — the app may be cached. Hard-refresh the page (Ctrl/Cmd+Shift+R).`);
+    stopBtn.disabled = true;
+    toolBtns.forEach((b) => b.classList.remove("active"));
+    return;
+  }
+
   const deviceId = cameraSelect.value || undefined;
 
   try {
