@@ -7,6 +7,8 @@ from a single HTML page — no server, no build step. Supports one or multiple U
 
 - **🦾 Elbow Angle** — TensorFlow.js MoveNet pose estimation; tracks shoulder–elbow–wrist and
   shows the joint angle live, with min/max tracking.
+- **🖱️ Click Recorder** — Start a session and tap Record (or press Space) to log
+  event timestamps; shows elapsed time per click and exports the session as JSON.
 - **⚡ Reaction Time** — Two trigger lines on the canvas. Move into the START line to begin the
   timer, the STOP line to end it; reports latest, average, and best.
 - **⏱️ Video Delay** — Replays the camera feed delayed by a configurable 10–30 seconds via a
