@@ -5,6 +5,7 @@ import { reactionTimeTool } from "./tools/reaction-time.js";
 import { videoDelayTool } from "./tools/video-delay.js";
 import { ghostTool } from "./tools/ghost.js";
 import { frameSequenceTool } from "./tools/frame-sequence.js";
+import { clickRecorderTool } from "./tools/click-recorder.js";
 
 const TOOLS = {
   "elbow-angle": elbowAngleTool,
@@ -12,6 +13,7 @@ const TOOLS = {
   "video-delay": videoDelayTool,
   "ghost": ghostTool,
   "frame-sequence": frameSequenceTool,
+  "click-recorder": clickRecorderTool,
 };
 
 const workspace = document.getElementById("workspace");
