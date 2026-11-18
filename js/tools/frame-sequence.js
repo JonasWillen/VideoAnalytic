@@ -182,7 +182,7 @@ export const frameSequenceTool = {
         resolve();
       };
       this.video.addEventListener("loadedmetadata", onMeta);
-      this.video.src = URL.createObjectURL(file);
+      this.video.src = URL.createObjectURL(source);
       this.video.load();
       setTimeout(() => { this.video.removeEventListener("loadedmetadata", onMeta); resolve(); }, 1500);
     });
