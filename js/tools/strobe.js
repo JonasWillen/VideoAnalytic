@@ -2,9 +2,11 @@
 //
 // During a capture, every Nth frame of the live camera is composited into a
 // single offscreen canvas. The composite is updated live so the "fan" builds
-// up in real time. Two compositing modes:
-//   - lighten (pixel-max): each output pixel keeps the brightest value seen —
-//     the classic chronophotograph look.
+// up in real time. Three compositing modes:
+//   - overlay (ghosts): the first sampled frame is the opaque base image;
+//     every following frame is drawn on top with adjustable transparency —
+//     semi-transparent figures stacked over a fixed background.
+//   - lighten (pixel-max): each output pixel keeps the brightest value seen.
 //   - lighter (additive): frames add up, glowing trails (good in low light).
 // The finished image can be downloaded as PNG.
 
@@ -34,9 +36,12 @@ export const strobeTool = {
         <input type="number" id="st-duration" min="1" max="20" step="1" value="3" style="width:70px" />
         <label style="margin-left:16px" for="st-mode">Mode:</label>
         <select id="st-mode">
-          <option value="lighten" selected>Pixel-max (lighten)</option>
+          <option value="overlay" selected>Ghost overlay</option>
+          <option value="lighten">Pixel-max (lighten)</option>
           <option value="lighter">Additive glow</option>
         </select>
+        <label style="margin-left:16px" for="st-alpha">Ghost opacity:</label>
+        <input type="range" id="st-alpha" min="10" max="100" step="5" value="30" title="Opacity of each overlaid figure" />
         <label style="margin-left:16px"><input type="checkbox" id="st-mirror" checked /> Mirror</label>
       </div>
 
@@ -133,6 +138,19 @@ export const strobeTool = {
   // Composite one frame into the strobe canvas.
   composite() {
     const mode = this.container.querySelector("#st-mode").value;
+    if (mode === "overlay") {
+      // First sampled frame becomes the opaque base (fixed background);
+      // each following frame is stacked as a semi-transparent figure.
+      if (this.used === 0) {
+        this.sctx.globalAlpha = 1;
+      } else {
+        this.sctx.globalAlpha = Math.max(0.1, Math.min(1, Number(this.container.querySelector("#st-alpha").value) / 100));
+      }
+      this.sctx.globalCompositeOperation = "source-over";
+      this.sctx.drawImage(this.video, 0, 0, this.strobe.width, this.strobe.height);
+      this.sctx.globalAlpha = 1;
+      return;
+    }
     if (mode === "lighten") {
       // 'lighten' keeps the brightest value per pixel with each draw,
       // i.e. an exact running pixel-max across all captured frames.
