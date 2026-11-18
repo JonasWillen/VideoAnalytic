@@ -17,6 +17,8 @@ from a single HTML page — no server, no build step. Supports one or multiple U
   clip recorded directly in the tool from the camera; shows timestamps and downloads stills.
 - **🔦 Photocell** — A virtual timing gate on the live feed: each motion crossing logs an
   automatic timestamp plus the split since the previous pass; exports the events as JSON.
+- **✨ Strobe Image** — Chronophotography: every Nth camera frame is superimposed into one
+  image (pixel-max or additive glow), so a jump or throw appears as a striking "fan"; download as PNG.
 
 ## Run locally
 
@@ -55,6 +57,7 @@ js/tools/elbow-angle.js  # pose module
 js/tools/reaction-time.js # motion/timer module
 js/tools/video-delay.js  # ring-buffer delay module
 js/tools/photocell.js    # virtual timing-gate module
+js/tools/strobe.js       # chronophotography strobe-composite module
 ```
 
 See `agentic.md` for the full design spec.

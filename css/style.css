@@ -715,3 +715,32 @@ html, body {
 .pc-event-clock { color: var(--accent); }
 .pc-event-split { margin-left: auto; font-weight: 600; }
 .pc-event-split.muted { color: var(--muted); font-weight: 400; }
+
+
+/* ---------- Strobe tool ---------- */
+.st-stage-wrap {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.st-result-wrap { position: relative; flex: 1 1 320px; min-width: 260px; }
+.st-result-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.st-result {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: block;
+}
+@media (max-width: 620px) {
+  .st-stage-wrap { flex-direction: column; }
+}
