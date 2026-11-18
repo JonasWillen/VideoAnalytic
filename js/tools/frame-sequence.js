@@ -163,6 +163,12 @@ export const frameSequenceTool = {
     container.querySelector("#fs-file").textContent = label;
     setStatus("Loading video…", "warn");
     await this.loadVideo(source);
+    // MediaRecorder WebM blobs often report duration = Infinity because the
+    // muxer never writes it to the header. Seeking near the end forces the
+    // browser to measure the real duration.
+    if (!isFinite(this.video.duration)) {
+      await this.measureDuration();
+    }
     const dur = this.video.duration;
     if (!dur || !isFinite(dur)) {
       setStatus("Could not read video duration", "err");
@@ -185,6 +191,29 @@ export const frameSequenceTool = {
       this.video.src = URL.createObjectURL(source);
       this.video.load();
       setTimeout(() => { this.video.removeEventListener("loadedmetadata", onMeta); resolve(); }, 1500);
+    });
+  },
+
+  // Force the browser to compute the duration of a headerless (recorded) clip:
+  // jump near the end, wait for it to land, then read video.duration.
+  measureDuration() {
+    const v = this.video;
+    return new Promise((resolve) => {
+      const done = () => {
+        v.removeEventListener("durationchange", onDur);
+        v.removeEventListener("timeupdate", onDur);
+        v.removeEventListener("seeked", onDur);
+        v.currentTime = 0;
+        resolve();
+      };
+      const onDur = () => {
+        if (isFinite(v.duration) && v.duration > 0) done();
+      };
+      v.addEventListener("durationchange", onDur);
+      v.addEventListener("timeupdate", onDur);
+      v.addEventListener("seeked", onDur);
+      v.currentTime = 1e6;
+      setTimeout(done, 2000);
     });
   },
 
