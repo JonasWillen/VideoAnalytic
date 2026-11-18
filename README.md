@@ -15,6 +15,8 @@ from a single HTML page — no server, no build step. Supports one or multiple U
   frame ring buffer, for technique self-review.
 - **🎞️ Frame Sequence** — Extract 10 frames at a chosen interval from an uploaded clip or a
   clip recorded directly in the tool from the camera; shows timestamps and downloads stills.
+- **🔦 Photocell** — A virtual timing gate on the live feed: each motion crossing logs an
+  automatic timestamp plus the split since the previous pass; exports the events as JSON.
 
 ## Run locally
 
@@ -52,6 +54,7 @@ js/utils/frame.js        # frame differencing / motion detection
 js/tools/elbow-angle.js  # pose module
 js/tools/reaction-time.js # motion/timer module
 js/tools/video-delay.js  # ring-buffer delay module
+js/tools/photocell.js    # virtual timing-gate module
 ```
 
 See `agentic.md` for the full design spec.
