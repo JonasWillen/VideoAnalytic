@@ -7,6 +7,7 @@ import { ghostTool } from "./tools/ghost.js";
 import { frameSequenceTool } from "./tools/frame-sequence.js";
 import { clickRecorderTool } from "./tools/click-recorder.js";
 import { photocellTool } from "./tools/photocell.js";
+import { strobeTool } from "./tools/strobe.js";
 
 const TOOLS = {
   "elbow-angle": elbowAngleTool,
@@ -16,6 +17,7 @@ const TOOLS = {
   "frame-sequence": frameSequenceTool,
   "click-recorder": clickRecorderTool,
   "photocell": photocellTool,
+  "strobe": strobeTool,
 };
 
 const workspace = document.getElementById("workspace");
