@@ -108,10 +108,10 @@ export const photocellTool = {
     const loop = () => {
       this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
       const frame = grabFrame(this.ctx, this.canvas.width, this.canvas.height);
+      const now = performance.now();
 
       if (this.prevFrame) {
         const motion = motionOnColumn(frame, this.prevFrame, this.gateX, Number(container.querySelector("#pc-sens").value));
-        const now = performance.now();
         const cooldown = Number(container.querySelector("#pc-cool").value);
 
         if (this.gateBusy) {
