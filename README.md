@@ -13,6 +13,8 @@ from a single HTML page — no server, no build step. Supports one or multiple U
   timer, the STOP line to end it; reports latest, average, and best.
 - **⏱️ Video Delay** — Replays the camera feed delayed by a configurable 10–30 seconds via a
   frame ring buffer, for technique self-review.
+- **🎞️ Frame Sequence** — Extract 10 frames at a chosen interval from an uploaded clip or a
+  clip recorded directly in the tool from the camera; shows timestamps and downloads stills.
 
 ## Run locally
 

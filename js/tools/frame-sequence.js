@@ -8,6 +8,9 @@
 //
 // Frame capture is done by seeking a hidden <video> to each target time and
 // drawing the decoded frame to an offscreen <canvas> on the 'seeked' event.
+//
+// Besides uploading a file, the user can record a clip directly from the live
+// camera stream (MediaRecorder); the resulting Blob feeds the same pipeline.
 
 const FRAME_COUNT = 10;
 
@@ -17,18 +20,28 @@ export const frameSequenceTool = {
   video: null,
   setStatus: null,
   frames: [], // [{ canvas, time, url }]
+  recorder: null,
+  recChunks: [],
+  recTimer: null,
+  recStart: 0,
 
   ui(container) {
     container.innerHTML = `
       <h2 class="tool-title">🎞️ Frame Sequence</h2>
-      <p class="tool-desc">Extract 10 frames from a recorded video at a chosen interval (default ~100 ms apart). Pick the start point and the time between each frame, then capture.</p>
+      <p class="tool-desc">Extract 10 frames from a video at a chosen interval (default ~100 ms apart). Upload a file or record a clip from the camera, pick the start point and the time between each frame, then capture.</p>
 
       <div class="tool-controls">
         <label class="tool-btn" style="width:auto;cursor:pointer">
           ⬆ Upload video
           <input type="file" id="fs-upload" accept="video/*" hidden />
         </label>
+        <button id="fs-record" type="button" class="tool-btn" style="width:auto">⏺ Record from camera</button>
         <span id="fs-file" class="value">No file</span>
+      </div>
+
+      <div id="fs-live-wrap" class="fs-live-wrap" hidden>
+        <video id="fs-live" class="fs-live" muted playsinline></video>
+        <span id="fs-rec-timer" class="value fs-rec-timer" hidden>0.0s</span>
       </div>
 
       <div class="tool-controls fs-seek-row">
@@ -63,31 +76,72 @@ export const frameSequenceTool = {
     const upload = container.querySelector("#fs-upload");
     const start = container.querySelector("#fs-start");
     const startVal = container.querySelector("#fs-start-val");
-    const interval = container.querySelector("#fs-interval");
     const captureBtn = container.querySelector("#fs-capture");
     const dlAllBtn = container.querySelector("#fs-download-all");
-    const info = container.querySelector("#fs-info");
 
     this.container = container;
 
     upload.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      this.resetFrames();
-      container.querySelector("#fs-file").textContent = file.name;
-      setStatus("Loading video…", "warn");
-      await this.loadVideo(file);
-      const dur = this.video.duration;
-      if (!dur || !isFinite(dur)) {
-        setStatus("Could not read video duration", "err");
+      await this.loadSource(container, file, file.name, setStatus);
+    });
+
+    // Record a clip from the live camera stream and load it for analysis.
+    // The stream is already started by the app router before init().
+    const recordBtn = container.querySelector("#fs-record");
+    const liveWrap = container.querySelector("#fs-live-wrap");
+    const live = container.querySelector("#fs-live");
+    const recTimer = container.querySelector("#fs-rec-timer");
+
+    if (this.stream && this.stream.getVideoTracks().length > 0) {
+      live.srcObject = this.stream;
+      live.play().catch(() => {});
+      liveWrap.hidden = false;
+    } else {
+      recordBtn.disabled = true;
+      recordBtn.title = "No camera stream available — upload a video instead";
+    }
+
+    recordBtn.addEventListener("click", () => {
+      if (this.recorder && this.recorder.state === "recording") {
+        this.recorder.stop();
         return;
       }
-      // start slider spans the safe range: 0 .. (duration - 10*interval)
-      this.updateStartRange(container, dur);
-      captureBtn.disabled = false;
-      setStatus(`Loaded: ${dur.toFixed(2)}s`, "ok");
-      info.textContent = `duration ${dur.toFixed(2)}s · ${this.video.videoWidth}×${this.video.videoHeight}`;
-      this.drawPreview(container, +start.value);
+      if (!this.stream) {
+        setStatus("No camera stream available", "err");
+        return;
+      }
+      const mime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"]
+        .find((m) => MediaRecorder.isTypeSupported(m));
+      try {
+        this.recorder = mime ? new MediaRecorder(this.stream, { mimeType: mime }) : new MediaRecorder(this.stream);
+      } catch {
+        setStatus("Recording is not supported in this browser", "err");
+        return;
+      }
+      this.recChunks = [];
+      this.recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) this.recChunks.push(ev.data); };
+      this.recorder.onstop = async () => {
+        clearInterval(this.recTimer);
+        recTimer.hidden = true;
+        recordBtn.textContent = "⏺ Record from camera";
+        recordBtn.classList.remove("recording");
+        const blob = new Blob(this.recChunks, { type: this.recorder.mimeType || "video/webm" });
+        if (blob.size === 0) {
+          setStatus("Recording failed — no data captured", "err");
+          return;
+        }
+        await this.loadSource(container, blob, "camera-recording.webm", setStatus);
+      };
+      this.recorder.start(250);
+      this.recStart = performance.now();
+      recTimer.hidden = false;
+      recordBtn.textContent = "⏹ Stop recording";
+      recordBtn.classList.add("recording");
+      this.recTimer = setInterval(() => {
+        recTimer.textContent = `${((performance.now() - this.recStart) / 1000).toFixed(1)}s`;
+      }, 100);
     });
 
     // Live-seek the preview while scrubbing the start point.
@@ -100,10 +154,28 @@ export const frameSequenceTool = {
     captureBtn.addEventListener("click", () => this.capture(container, setStatus, dlAllBtn));
     dlAllBtn.addEventListener("click", () => this.downloadAll());
 
-    setStatus("Upload a video to begin.", "");
+    setStatus("Upload a video or record one from the camera to begin.", "");
   },
 
-  loadVideo(file) {
+  // Load a source (uploaded File or recorded Blob), then enable capture controls.
+  async loadSource(container, source, label, setStatus) {
+    this.resetFrames();
+    container.querySelector("#fs-file").textContent = label;
+    setStatus("Loading video…", "warn");
+    await this.loadVideo(source);
+    const dur = this.video.duration;
+    if (!dur || !isFinite(dur)) {
+      setStatus("Could not read video duration", "err");
+      return;
+    }
+    this.updateStartRange(container, dur);
+    setStatus(`Loaded: ${dur.toFixed(2)}s`, "ok");
+    container.querySelector("#fs-info").textContent =
+      `duration ${dur.toFixed(2)}s · ${this.video.videoWidth}×${this.video.videoHeight}`;
+    this.drawPreview(container, +container.querySelector("#fs-start").value);
+  },
+
+  loadVideo(source) {
     return new Promise((resolve) => {
       const onMeta = () => {
         this.video.removeEventListener("loadedmetadata", onMeta);
@@ -170,7 +242,7 @@ export const frameSequenceTool = {
     const dur = this.video.duration;
 
     if (!this.video.src || !dur || !isFinite(dur)) {
-      setStatus("Upload a video first", "err");
+      setStatus("Upload or record a video first", "err");
       return;
     }
     if (intervalMs < 16) {
@@ -262,11 +334,24 @@ export const frameSequenceTool = {
 
   stop() {
     this.resetFrames();
+    this.stopRecording();
     if (this.video) {
       if (this.video.src) URL.revokeObjectURL(this.video.src);
       this.video.removeAttribute("src");
       this.video.load();
     }
     this.stream = null;
+  },
+
+  stopRecording() {
+    if (this.recTimer) {
+      clearInterval(this.recTimer);
+      this.recTimer = null;
+    }
+    if (this.recorder && this.recorder.state !== "inactive") {
+      this.recorder.onstop = null;
+      this.recorder.stop();
+    }
+    this.recorder = null;
   },
 };
